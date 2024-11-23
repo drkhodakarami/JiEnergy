@@ -28,7 +28,10 @@ import jiraiyah.jienergy.SyncedEnergyStorage;
 import jiraiyah.jienergy.WrappedEnergyStorage;
 import jiraiyah.jienergy.interfaces.IWrappedEnergyProvider;
 import jiraiyah.jiralib.blockentity.UpdatableBE;
+import jiraiyah.jiralib.blockentity.UpdatableEndTickBE;
+import jiraiyah.jiralib.interfaces.ISync;
 import jiraiyah.jiralib.interfaces.ITickBE;
+import jiraiyah.jiralib.interfaces.ITickSyncBE;
 import jiraiyah.jiralib.network.BlockPosPayload;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
@@ -53,7 +56,7 @@ import static jiraiyah.reference.BEKeys.HAS_ENERGY;
  * @author jiraiyah
  */
 @SuppressWarnings("unused")
-public abstract class AbstractEnergyBE extends UpdatableBE implements ExtendedScreenHandlerFactory<BlockPosPayload>, ITickBE, IWrappedEnergyProvider
+public abstract class AbstractEnergyBE extends UpdatableEndTickBE implements ExtendedScreenHandlerFactory<BlockPosPayload>, ITickSyncBE, IWrappedEnergyProvider
 {
     /**
      * The {@link WrappedEnergyStorage} instance that holds the current energy storage.
@@ -66,7 +69,7 @@ public abstract class AbstractEnergyBE extends UpdatableBE implements ExtendedSc
      * energy storage units with specified parameters.
      * </p>
      */
-    private final WrappedEnergyStorage<SyncedEnergyStorage> energyStorage = new WrappedEnergyStorage<>();
+    private final WrappedEnergyStorage energyStorage = new WrappedEnergyStorage();
 
     /**
      * Constructor for the AbstractEnergyBE class. Initializes a new block entity with the specified
@@ -109,7 +112,7 @@ public abstract class AbstractEnergyBE extends UpdatableBE implements ExtendedSc
     @Override
     public void AddEnergyStorage(int capacity, int maxInsert, int maxExtract, Direction direction)
     {
-        energyStorage.addStorage(this, capacity, maxInsert, maxExtract, direction);
+        energyStorage.addSyncedStorage(this, capacity, maxInsert, maxExtract, direction);
     }
 
     /**
@@ -124,24 +127,9 @@ public abstract class AbstractEnergyBE extends UpdatableBE implements ExtendedSc
      *         representing the energy storage for this block entity.
      */
     @Override
-    public WrappedEnergyStorage<SyncedEnergyStorage> getEnergyStorage()
+    public WrappedEnergyStorage getEnergyStorage()
     {
         return this.energyStorage;
-    }
-
-    /**
-     * Executes the logic for the block entity on each tick. This method is called
-     * every game tick (20 times per second) and can be overridden to implement
-     * custom behavior that should occur regularly, such as processing inventory
-     * updates, energy management, or other periodic actions.
-     * <p>
-     * This base implementation is empty and can be extended by subclasses to provide
-     * specific functionality as needed.
-     */
-    @Override
-    public void tick()
-    {
-
     }
 
     /**

@@ -24,6 +24,7 @@
 
 package jiraiyah.jienergy;
 
+import jiraiyah.jiralib.blockentity.NoScreenUpdatableBE;
 import jiraiyah.jiralib.blockentity.UpdatableBE;
 import jiraiyah.jiralib.interfaces.NBTSerializable;
 import net.minecraft.nbt.NbtCompound;
@@ -31,6 +32,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
+import team.reborn.energy.api.base.SimpleEnergyStorage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,63 +43,34 @@ import static jiraiyah.reference.BEKeys.ENERGY_AMOUNT;
 
 /**
  * The {@code WrappedEnergyStorage} class is a generic wrapper for managing multiple
- * {@link SyncedEnergyStorage} instances. It provides methods to add, retrieve, and
+ * {@link SimpleEnergyStorage} instances. It provides methods to add, retrieve, and
  * manage energy storages, including direction-specific storages. It also implements
  * the {@link NBTSerializable} interface for serialization and deserialization of
  * energy storage data to and from NBT format.
  *
- * @param <T> The type of {@link SyncedEnergyStorage} managed by this wrapper.
+ * @author TurtyWurty, modified by Jiraiyah
  */
 @SuppressWarnings("unused")
-public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTSerializable<NbtList>
+public class WrappedEnergyStorage implements NBTSerializable<NbtList>
 {
     /**
      * A list holding all {@link SyncedEnergyStorage} instances.
      */
-    private final List<T> storages = new ArrayList<>();
+    private final List<SimpleEnergyStorage> storages = new ArrayList<>();
 
     /**
      * A map associating {@link Direction} with specific {@link SyncedEnergyStorage} instances.
      */
-    private final Map<Direction, T> sidedStorageMap = new HashMap<>();
+    private final Map<Direction, SimpleEnergyStorage> sidedStorageMap = new HashMap<>();
 
     /**
      * Adds a new energy storage without specifying a direction.
      *
      * @param storage The energy storage to be added.
      */
-     public void addStorage(T storage)
+    public void addStorage(SimpleEnergyStorage storage)
     {
         addStorage(storage, null);
-    }
-
-    /**
-     * Adds a new energy storage to the specified block entity with the given parameters.
-     *
-     * @param blockEntity The block entity to which the energy storage will be added.
-     * @param capacity    The total capacity of the energy storage.
-     * @param maxInsert   The maximum amount of energy that can be inserted per operation.
-     * @param maxExtract  The maximum amount of energy that can be extracted per operation.
-     */
-    public void addStorage(UpdatableBE blockEntity, int capacity, int maxInsert, int maxExtract)
-    {
-        addStorage(blockEntity, capacity, maxInsert, maxExtract, null);
-    }
-
-    /**
-     * Adds a new energy storage to the specified block entity with the given parameters
-     * and associates it with a specific direction.
-     *
-     * @param blockEntity The block entity to which the energy storage will be added.
-     * @param capacity    The total capacity of the energy storage.
-     * @param maxInsert   The maximum amount of energy that can be inserted per operation.
-     * @param maxExtract  The maximum amount of energy that can be extracted per operation.
-     * @param direction   The direction associated with this energy storage.
-     */
-    @SuppressWarnings("unchecked")
-    public void addStorage(UpdatableBE blockEntity, int capacity, int maxInsert, int maxExtract, Direction direction)
-    {
-        addStorage((T) new SyncedEnergyStorage(blockEntity, capacity, maxInsert, maxExtract), direction);
     }
 
     /**
@@ -106,17 +79,71 @@ public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTS
      * @param storage   The energy storage to be added.
      * @param direction The direction associated with this energy storage.
      */
-    public void addStorage(T storage, Direction direction)
+    public void addStorage(SimpleEnergyStorage storage, Direction direction)
     {
         this.storages.add(storage);
 
-        if(direction == null)
+        if (direction == null)
         {
-            for(Direction dir : Direction.values())
-                this. sidedStorageMap.put(dir, storage);
+            for (Direction dir : Direction.values())
+                this.sidedStorageMap.put(dir, storage);
         }
         else
-            this. sidedStorageMap.put(direction, storage);
+            this.sidedStorageMap.put(direction, storage);
+    }
+
+    /**
+     * Adds a new simple energy storage to the specified block entity with the given parameters.
+     *
+     * @param capacity   The total capacity of the energy storage.
+     * @param maxInsert  The maximum amount of energy that can be inserted per operation.
+     * @param maxExtract The maximum amount of energy that can be extracted per operation.
+     */
+    public void addSimpleStorage(int capacity, int maxInsert, int maxExtract)
+    {
+        addSimpleStorage(capacity, maxInsert, maxExtract, null);
+    }
+
+    /**
+     * Adds a new simple energy storage to the specified block entity with the given parameters
+     * and associates it with a specific direction.
+     *
+     * @param capacity   The total capacity of the energy storage.
+     * @param maxInsert  The maximum amount of energy that can be inserted per operation.
+     * @param maxExtract The maximum amount of energy that can be extracted per operation.
+     * @param direction  The direction associated with this energy storage.
+     */
+    public void addSimpleStorage(int capacity, int maxInsert, int maxExtract, Direction direction)
+    {
+        addStorage(new SimpleEnergyStorage(capacity, maxInsert, maxExtract), direction);
+    }
+
+    /**
+     * Adds a new synced energy storage to the specified block entity with the given parameters.
+     *
+     * @param blockEntity The block entity to which the energy storage will be added.
+     * @param capacity    The total capacity of the energy storage.
+     * @param maxInsert   The maximum amount of energy that can be inserted per operation.
+     * @param maxExtract  The maximum amount of energy that can be extracted per operation.
+     */
+    public void addSyncedStorage(NoScreenUpdatableBE blockEntity, int capacity, int maxInsert, int maxExtract)
+    {
+        addSyncedStorage(blockEntity, capacity, maxInsert, maxExtract, null);
+    }
+
+    /**
+     * Adds a new synced energy storage to the specified block entity with the given parameters
+     * and associates it with a specific direction.
+     *
+     * @param blockEntity The block entity to which the energy storage will be added.
+     * @param capacity    The total capacity of the energy storage.
+     * @param maxInsert   The maximum amount of energy that can be inserted per operation.
+     * @param maxExtract  The maximum amount of energy that can be extracted per operation.
+     * @param direction   The direction associated with this energy storage.
+     */
+    public void addSyncedStorage(NoScreenUpdatableBE blockEntity, int capacity, int maxInsert, int maxExtract, Direction direction)
+    {
+        addStorage(new SyncedEnergyStorage(blockEntity, capacity, maxInsert, maxExtract), direction);
     }
 
     /**
@@ -124,7 +151,7 @@ public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTS
      *
      * @return A list of all energy storages.
      */
-    public List<T> getStorages()
+    public List<SimpleEnergyStorage> getStorages()
     {
         return this.storages;
     }
@@ -134,7 +161,7 @@ public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTS
      *
      * @return A map of direction-specific storages.
      */
-    public Map<Direction, T> getSidedStorageMap()
+    public Map<Direction, SimpleEnergyStorage> getSidedStorageMap()
     {
         return this.sidedStorageMap;
     }
@@ -233,7 +260,7 @@ public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTS
      * @param direction The direction of the storage.
      * @return The storage associated with the direction.
      */
-    public T getStorage(@Nullable Direction direction)
+    public SimpleEnergyStorage getStorage(@Nullable Direction direction)
     {
         if(direction == null)
             return this.storages.getFirst();
@@ -246,12 +273,11 @@ public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTS
      * @param index The index of the storage.
      * @return The storage at the specified index.
      */
-    public T getStorage(int index)
+    public SimpleEnergyStorage getStorage(int index)
     {
         return this.storages.get(index);
     }
 
-    //region Serialization
     /**
      * Serializes the energy storage data to an NBT list.
      * This method is used to save the current state of the energy storages
@@ -264,7 +290,7 @@ public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTS
     public NbtList writeNbt(RegistryWrapper.WrapperLookup registryLookup)
     {
         NbtList nbtList = new NbtList();
-        for( T storage : this.storages)
+        for (SimpleEnergyStorage storage : this.storages)
         {
             NbtCompound nbt = new NbtCompound();
             nbt.putLong("jiralib." + ENERGY_AMOUNT, storage.getAmount());
@@ -289,5 +315,4 @@ public class WrappedEnergyStorage<T extends SyncedEnergyStorage> implements NBTS
             this.storages.get(index).amount = compound.getLong("jiralib." + ENERGY_AMOUNT);
         }
     }
-    //endregion
 }

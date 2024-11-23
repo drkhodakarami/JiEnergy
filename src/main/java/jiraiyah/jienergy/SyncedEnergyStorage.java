@@ -24,7 +24,9 @@
 
 package jiraiyah.jienergy;
 
+import jiraiyah.jiralib.blockentity.NoScreenUpdatableBE;
 import jiraiyah.jiralib.blockentity.UpdatableBE;
+import jiraiyah.jiralib.interfaces.ISync;
 import net.minecraft.block.entity.BlockEntity;
 import team.reborn.energy.api.base.SimpleEnergyStorage;
 
@@ -36,9 +38,41 @@ import team.reborn.energy.api.base.SimpleEnergyStorage;
  * @author TurtyWurty
  */
 @SuppressWarnings("unused")
-public class SyncedEnergyStorage extends SimpleEnergyStorage
+public class SyncedEnergyStorage extends SimpleEnergyStorage implements ISync
 {
+    /**
+     * Represents the associated block entity for this energy storage system.
+     *
+     * <p>This block entity is responsible for managing the state and behavior
+     * of the block within the Minecraft world. It interacts with the energy
+     * storage system to synchronize energy levels and update the block's
+     * state as needed.</p>
+     *
+     * <p>The block entity is expected to implement interfaces such as
+     * {@link jiraiyah.jiralib.interfaces.ISync} to ensure proper synchronization
+     * across the network. It may also extend classes like
+     * {@link jiraiyah.jiralib.blockentity.UpdatableBE} or
+     * {@link jiraiyah.jiralib.blockentity.NoScreenUpdatableBE} to provide
+     * additional functionality.</p>
+     *
+     * <p>Note: This attribute is final, indicating that the block entity
+     * reference is immutable once assigned.</p>
+     */
     private final BlockEntity blockEntity;
+
+    /**
+     * Indicates whether the energy storage state has been modified and requires synchronization.
+     *
+     * <p>This flag is used to track changes in the energy storage system that need to be
+     * communicated to the client or saved to persistent storage. When set to {@code true},
+     * it signifies that the energy levels or related properties have changed since the last
+     * update, and appropriate actions should be taken to ensure consistency.</p>
+     *
+     * <p>Typically, this attribute is set to {@code true} whenever an operation alters the
+     * energy storage, such as energy input or output. It should be reset to {@code false}
+     * after the necessary synchronization or saving operations are completed.</p>
+     */
+    private boolean isDirty = false;
 
     /**
      * Constructs a new {@code SyncingEnergyStorage} instance.
@@ -52,6 +86,32 @@ public class SyncedEnergyStorage extends SimpleEnergyStorage
     {
         super(capacity, maxInsert, maxExtract);
         this.blockEntity = blockEntity;
+    }
+
+    /**
+     * Synchronizes the energy storage state with the client and updates the associated block entity.
+     *
+     * <p>This method is responsible for ensuring that the current state of the energy storage
+     * is accurately reflected on the client side. It performs necessary operations to update
+     * the {@link BlockEntity} and any other components that rely on the energy storage data.</p>
+     *
+     * <p>Implementations should leverage the {@link ISync} interface to facilitate efficient
+     * data synchronization across the network. This method is typically called whenever there
+     * are changes in the energy storage that need to be communicated to the client, ensuring
+     * consistency between the server and client states.</p>
+     */
+    @SuppressWarnings("DataFlowIssue")
+    @Override
+    public void sync()
+    {
+        if (this.isDirty && this.blockEntity != null && this.blockEntity.hasWorld() && !this.blockEntity.getWorld().isClient)
+        {
+            this.isDirty = false;
+            if (this.blockEntity instanceof NoScreenUpdatableBE updatableBE)
+                updatableBE.update();
+            else
+                this.blockEntity.markDirty();
+        }
     }
 
     /**
@@ -76,10 +136,7 @@ public class SyncedEnergyStorage extends SimpleEnergyStorage
     protected void onFinalCommit()
     {
         super.onFinalCommit();
-        if(this.blockEntity instanceof UpdatableBE updatableBE)
-            updatableBE.update();
-        else
-            this.blockEntity.markDirty();
+        this.isDirty = true;
     }
 
     /**

@@ -33,16 +33,17 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public abstract class EnergyBankBase extends Block implements BlockEntityProvider
+public abstract class AbstractEnergyBlock extends Block implements BlockEntityProvider
 {
-    protected MapCodec<? extends EnergyBankBase> CODEC;
+    protected MapCodec<? extends AbstractEnergyBlock> CODEC;
 
-    public EnergyBankBase(Settings settings)
+    public AbstractEnergyBlock(Settings settings)
     {
         super(settings);
     }
@@ -73,5 +74,17 @@ public abstract class EnergyBankBase extends Block implements BlockEntityProvide
     {
         BlockEntity blockEntity = world.getBlockEntity(pos);
         return blockEntity instanceof NamedScreenHandlerFactory ? (NamedScreenHandlerFactory) blockEntity : null;
+    }
+
+    @Override
+    protected boolean hasComparatorOutput(BlockState state)
+    {
+        return true;
+    }
+
+    @Override
+    protected int getComparatorOutput(BlockState state, World world, BlockPos pos)
+    {
+        return ScreenHandler.calculateComparatorOutput(world.getBlockEntity(pos));
     }
 }

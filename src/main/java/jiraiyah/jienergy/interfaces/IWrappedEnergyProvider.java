@@ -75,8 +75,8 @@ public interface IWrappedEnergyProvider
      * which can be used for operations related to energy management, such as
      * checking current energy levels or manipulating energy within the storage.
      *
-     * @return A {@link WrappedEnergyStorage< SyncedEnergyStorage >} instance
+     * @return A {@link WrappedEnergyStorage} instance
      *         representing the energy storage for this block entity.
      */
-    WrappedEnergyStorage<SyncedEnergyStorage> getEnergyStorage();
+    WrappedEnergyStorage getEnergyStorage();
 }
